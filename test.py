@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-TARGET_FILE = "mini-Toronto.osm.pbf"
+TARGET_FILE = "micro-Toronto.osm.pbf"
 
 print(os.path.join(dir_path, TARGET_FILE))
 
