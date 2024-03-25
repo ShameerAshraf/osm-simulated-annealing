@@ -12,6 +12,19 @@ from routes import road_class_to_kmph, swap_if_less
 
 from pdb import set_trace as qwe
 
+def route_verifier(routes):
+    for i in range(0, len(routes) - 1):
+        if routes[i][len(routes[i]) - 1] != routes[i+1][0]:
+            print(f"Error in comparing {i} and {i+1}")
+            return False
+
+    if routes[len(routes) - 1][len(routes[len(routes) - 1]) - 1] != routes[0][0]:
+            print(f"Error in comparing last and first")
+            return False
+
+    return True
+        
+
 def plot_async(G, routes, route_colors):
     fig, ax = ox.plot_graph_routes(G, routes, 
     route_colors=route_colors, 
@@ -137,6 +150,7 @@ def main():
         #index_1 = 5
         #index_2 = 8
 
+        force_new = False
 
         qwe()
 
@@ -144,7 +158,7 @@ def main():
             if index_1 > index_2:
                 index_1, index_2 = index_2, index_1
 
-            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time)
+            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new)
 
             if changed:
                 route_colors=["r", "r", "r", "r", "r", "r", "r", "r", "r", "r"]

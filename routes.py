@@ -23,8 +23,15 @@ def road_class_to_kmph(road_class):
     else:
         return 50
 
+# do the math
+def p_accept_new(t1, t2):
+    if t1 > t2:
+        return True
+    else:
+        return False
+
 # swap edges in route, check if total length has decreased
-def swap_if_less(G, routes, index_1, index_2, total_travel_time):
+def swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new):
 
     print(f"Old Total Travel Time: {total_travel_time}")
 
@@ -42,11 +49,13 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time):
     # reverse either section of loop to find shorter routes "outside" the edges first
     
     # reverse edges in between
+    new_pos = 0
     for i in range(index_1 + 1, index_2):
-        temp = nx.shortest_path(G, new_routes[i][len(new_routes[i]) - 1], new_routes[i][0])
+        temp = nx.shortest_path(G, routes[i][len(routes[i]) - 1], routes[i][0])
         travel_time = nx.path_weight(G, temp, "travel_time_seconds")
         print(f"travel_time_{i}: {travel_time}")
-        new_routes[i] = temp
+        new_routes[index_2 - 1 - new_pos] = temp
+        new_pos += 1
 
     # find shorter path with/without edge in map using shorter outside route
 
@@ -72,7 +81,7 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time):
     print(f"New Total Travel Time: {new_total_travel_time}")
 
     # work on function to check if route should be modified
-    modifying_route = new_total_travel_time < total_travel_time
+    modifying_route = force_new | p_accept_new(total_travel_time, new_total_travel_time)
 
     if modifying_route:
         return new_routes, new_total_travel_time, modifying_route
