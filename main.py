@@ -7,12 +7,15 @@ import pandas as pd
 
 from multiprocessing import Process
 
-from routes import road_class_to_kmph
+from routes import road_class_to_kmph, swap_if_less
 
 from pdb import set_trace as qwe
 
 def plot_async(G, routes):
-    fig, ax = ox.plot_graph_routes(G, routes, route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"], route_linewidth=6, node_size=0)
+    fig, ax = ox.plot_graph_routes(G, routes, 
+    route_colors=["r", "g", "y", "y", "y", "b", "r", "r", "r", "r"], 
+    route_linewidths=[3, 6, 3, 3, 3, 6, 3, 3, 3, 3], 
+    node_size=0)
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -78,19 +81,19 @@ def main():
     random_points = ox.utils_geo.sample_points(G, 10)
     random_node_ids = ox.distance.nearest_nodes(G, random_points.x.values, random_points.y.values)
 
-    # generate routes to/from all points? 2d array
-    # 
+    # generate routes to/from all points? 4d array
+    # paths[source][destination] = route[nodes]
 
     routes = []
-    travel_time_routes = []
+    total_travel_time = 0
 
     for i in range(0, len(random_node_ids) - 1):
-        print(f"########################## ROUTE {i} ###############")
+        print(f"############### ROUTE {i} ###############")
         route = nx.shortest_path(G, random_node_ids[i], random_node_ids[i+1], weight="travel_time_seconds")
 
         # sum up travel_time_seconds for the route
         travel_time = nx.path_weight(G, route, "travel_time_seconds")
-        print("TRAVEL TIME " + str(travel_time))
+        print("####### TRAVEL TIME " + str(travel_time) + " #######")
 
         #for j in range(0, len(route) - 1):
             # sum up travel_time_seconds for the route
@@ -100,22 +103,30 @@ def main():
 
         # store routes and corresponding travel_time_seconds for routes
         routes.append(route)
-        travel_time_routes.append(travel_time)
+        total_travel_time += travel_time
 
     route = nx.shortest_path(G, random_node_ids[len(random_node_ids) - 1], random_node_ids[0], weight="travel_time_seconds")
     travel_time = nx.path_weight(G, route, "travel_time_seconds")
+    print("####### TRAVEL TIME " + str(travel_time) + " #######")
     routes.append(route)
-    travel_time_routes.append(travel_time)
+    total_travel_time += travel_time
 
     #fig, ax = ox.plot_graph_routes(G, routes, route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"], route_linewidth=6, node_size=0)
 
-    #draw async
-    draw = Process(target=plot_async, args=(G, routes))
-    draw.start()
+    loop = True
+    while loop:
+        #draw async
+        draw = Process(target=plot_async, args=(G, routes))
+        draw.start()
 
-    qwe()
+        qwe()
 
+        #draw.join()
+
+        routes = swap_if_less(G, routes, 1, 5, total_travel_time)
+        
     draw.join()
+
     #ox.plot_graph(G)
 
     ## main file, open map, plot functions for everything in other file
