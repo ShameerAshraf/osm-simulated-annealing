@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import osmnx as ox
 import networkx as nx
 import pandas as pd
+import random
 
 from multiprocessing import Process
 
@@ -11,10 +12,10 @@ from routes import road_class_to_kmph, swap_if_less
 
 from pdb import set_trace as qwe
 
-def plot_async(G, routes):
+def plot_async(G, routes, route_colors):
     fig, ax = ox.plot_graph_routes(G, routes, 
-    route_colors=["r", "g", "y", "y", "y", "b", "r", "r", "r", "r"], 
-    route_linewidths=[3, 6, 3, 3, 3, 6, 3, 3, 3, 3], 
+    route_colors=route_colors, 
+    route_linewidth=6, 
     node_size=0)
 
 def main():
@@ -107,23 +108,60 @@ def main():
 
     route = nx.shortest_path(G, random_node_ids[len(random_node_ids) - 1], random_node_ids[0], weight="travel_time_seconds")
     travel_time = nx.path_weight(G, route, "travel_time_seconds")
+    print(f"############### ROUTE 9 ###############")
     print("####### TRAVEL TIME " + str(travel_time) + " #######")
     routes.append(route)
     total_travel_time += travel_time
 
     #fig, ax = ox.plot_graph_routes(G, routes, route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"], route_linewidth=6, node_size=0)
 
+    route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"]
+
+    # draw base graph
+    draw = Process(target=plot_async, args=(G, routes, route_colors))
+    draw.start()
+
     loop = True
     while loop:
-        #draw async
-        draw = Process(target=plot_async, args=(G, routes))
-        draw.start()
 
-        qwe()
+        #qwe()
 
         #draw.join()
 
-        routes = swap_if_less(G, routes, 1, 5, total_travel_time)
+        # generate random indexes, store bigger index in index_2
+        # call if Math.abs(index2 - index1) > 1
+        
+        index_1 = random.randrange(10)
+        index_2 = random.randrange(10)
+
+        #index_1 = 5
+        #index_2 = 8
+
+
+        qwe()
+
+        if abs(index_2 - index_1) > 1:
+            if index_1 > index_2:
+                index_1, index_2 = index_2, index_1
+
+            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time)
+
+            if changed:
+                route_colors=["r", "r", "r", "r", "r", "r", "r", "r", "r", "r"]
+
+                route_colors[index_1] = "b"
+                route_colors[index_2] = "b"
+                for i in range(index_1 + 1, index_2):
+                    route_colors[i] = "y"
+            else:
+                route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"]
+
+
+            #draw async
+            draw = Process(target=plot_async, args=(G, routes, route_colors))
+            draw.start()
+
+
         
     draw.join()
 
