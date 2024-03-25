@@ -10,8 +10,6 @@ from multiprocessing import Process
 
 from routes import road_class_to_kmph, swap_if_less
 
-from pdb import set_trace as qwe
-
 def route_verifier(routes):
     for i in range(0, len(routes) - 1):
         if routes[i][len(routes[i]) - 1] != routes[i+1][0]:
@@ -55,7 +53,6 @@ def main():
     #roads = osm.get_network(network_type="driving")
     #roads.plot(figsize=(10,10))
 
-
     nodes, edges = osm.get_network(network_type="driving", nodes=True)
 
     # Plot the data
@@ -92,10 +89,11 @@ def main():
     # create G
     G = osm.to_graph(nodes, edges, graph_type="networkx")
 
+    # generate random points, get nearest nodes
     random_points = ox.utils_geo.sample_points(G, 10)
     random_node_ids = ox.distance.nearest_nodes(G, random_points.x.values, random_points.y.values)
 
-    # generate routes to/from all points? 4d array
+    # generate routes to/from all points? 4d array????
     # paths[source][destination] = route[nodes]
 
     routes = []
@@ -109,12 +107,6 @@ def main():
         travel_time = nx.path_weight(G, route, "travel_time_seconds")
         print("####### TRAVEL TIME " + str(travel_time) + " #######")
 
-        #for j in range(0, len(route) - 1):
-            # sum up travel_time_seconds for the route
-            #print(nx.path_weight(G, route, "travel_time_seconds"))
-            #e = G.get_edge_data(route[j], route[j+1])
-            #for item in e: print(str(e[item]['maxspeed']) + "--" + str(e[item]['travel_time_seconds']))
-
         # store routes and corresponding travel_time_seconds for routes
         routes.append(route)
         total_travel_time += travel_time
@@ -125,6 +117,7 @@ def main():
     print("####### TRAVEL TIME " + str(travel_time) + " #######")
     routes.append(route)
     total_travel_time += travel_time
+    print("####### TOTAL TRAVEL TIME FOR ORIGINAL ROUTE " + str(total_travel_time) + " #######")
 
     #fig, ax = ox.plot_graph_routes(G, routes, route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"], route_linewidth=6, node_size=0)
 
@@ -134,31 +127,26 @@ def main():
     draw = Process(target=plot_async, args=(G, routes, route_colors))
     draw.start()
 
-    loop = True
-    while loop:
+    while True:
 
-        #qwe()
-
-        #draw.join()
-
+        # run one step of SA based on user input
+        in_string = input("Enter any string to continue OR quit to quit\n")
+        if in_string == "quit":
+            break
+        else:
+            print("Step in simulated annealing")
+        
         # generate random indexes, store bigger index in index_2
         # call if Math.abs(index2 - index1) > 1
-        
+
         index_1 = random.randrange(10)
         index_2 = random.randrange(10)
-
-        #index_1 = 5
-        #index_2 = 8
-
-        force_new = False
-
-        qwe()
 
         if abs(index_2 - index_1) > 1:
             if index_1 > index_2:
                 index_1, index_2 = index_2, index_1
 
-            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new)
+            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time)
 
             if changed:
                 route_colors=["r", "r", "r", "r", "r", "r", "r", "r", "r", "r"]
@@ -170,18 +158,15 @@ def main():
             else:
                 route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"]
 
-
             #draw async
             draw = Process(target=plot_async, args=(G, routes, route_colors))
             draw.start()
 
 
-        
+    print("CLOSE ALL GRAPH WINDOWS")
     draw.join()
 
     #ox.plot_graph(G)
-
-    ## main file, open map, plot functions for everything in other file
 
 if __name__ == '__main__':
     main()

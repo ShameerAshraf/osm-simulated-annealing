@@ -1,9 +1,5 @@
 import networkx as nx
 
-# generate random points, get nearest nodes
-
-# getting routes between source-target
-
 # adding speedlimits
 def road_class_to_kmph(road_class):
     """
@@ -31,7 +27,7 @@ def p_accept_new(t1, t2):
         return False
 
 # swap edges in route, check if total length has decreased
-def swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new):
+def swap_if_less(G, routes, index_1, index_2, total_travel_time):
 
     print(f"Old Total Travel Time: {total_travel_time}")
 
@@ -44,10 +40,9 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new):
     source_2 = new_routes[index_2][0]
     dest_2 = new_routes[index_2][len(new_routes[index_2]) - 1]
 
-    # get new paths from 4d array
+    # get new paths from 4d array??
 
-    # reverse either section of loop to find shorter routes "outside" the edges first
-    
+    # todo: reverse either section of loop to find shorter routes "outside" the edges first
     # reverse edges in between
     new_pos = 0
     for i in range(index_1 + 1, index_2):
@@ -57,8 +52,6 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new):
         new_routes[index_2 - 1 - new_pos] = temp
         new_pos += 1
 
-    # find shorter path with/without edge in map using shorter outside route
-
     new_1 = nx.shortest_path(G, source_1, source_2, weight="travel_time_seconds")
     travel_time_1 = nx.path_weight(G, new_1, "travel_time_seconds")
     print(f"travel_time_{index_1}: {travel_time_1}")
@@ -67,11 +60,10 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new):
     travel_time_2 = nx.path_weight(G, new_2, "travel_time_seconds")
     print(f"travel_time_{index_2}: {travel_time_2}")
 
-    # check travel time of new_routes 
-
     new_routes[index_1] = new_1
     new_routes[index_2] = new_2
 
+    # check travel time of new_routes
     new_total_travel_time = 0
     for j in range(0, len(new_routes)):
         travel_time = nx.path_weight(G, new_routes[j], "travel_time_seconds")
@@ -80,8 +72,8 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time, force_new):
 
     print(f"New Total Travel Time: {new_total_travel_time}")
 
-    # work on function to check if route should be modified
-    modifying_route = force_new | p_accept_new(total_travel_time, new_total_travel_time)
+    # todo: work on function to check if route should be modified
+    modifying_route = p_accept_new(total_travel_time, new_total_travel_time)
 
     if modifying_route:
         return new_routes, new_total_travel_time, modifying_route
