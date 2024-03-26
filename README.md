@@ -35,3 +35,4 @@ The files contain a lot of commented out code left in for plotting and debugging
 [NetworkX shortest path algorithm](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.generic.shortest_path.html#networkx.algorithms.shortest_paths.generic.shortest_path)
 [travel time calculation based on speed limit and distance](https://access-ucl.readthedocs.io/en/latest/notebooks/spatial_network_analysis.html)
 [pandas GeoDataFrame reference](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html)
+[OpenStreetMap](https://wiki.openstreetmap.org/wiki/Map_features)
