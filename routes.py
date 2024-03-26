@@ -1,4 +1,11 @@
 import networkx as nx
+import random
+import math
+
+ALPHA = 0.01
+TEMPERATURE = 200
+MAX_ITERATIONS = 180
+LOCAL_ITERATIONS = 0
 
 # adding speedlimits
 def road_class_to_kmph(road_class):
@@ -21,13 +28,31 @@ def road_class_to_kmph(road_class):
 
 # do the math
 def p_accept_new(t1, t2):
+    
+    global TEMPERATURE
+    global LOCAL_ITERATIONS
+    
+    LOCAL_ITERATIONS += 1
+    TEMPERATURE -= ALPHA * TEMPERATURE
+
+    if LOCAL_ITERATIONS > MAX_ITERATIONS:
+        return False 
+
     if t1 > t2:
         return True
     else:
+        delta = t2 - t1
+        if random.random() <= math.exp(- delta / TEMPERATURE):
+            return True
         return False
+
 
 # swap edges in route, check if total length has decreased
 def swap_if_less(G, routes, index_1, index_2, total_travel_time):
+
+    if LOCAL_ITERATIONS > MAX_ITERATIONS:
+        print("Max iterations reached")
+        return routes, total_travel_time, False
 
     print(f"Old Total Travel Time: {total_travel_time}")
 

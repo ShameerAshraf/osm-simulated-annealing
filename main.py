@@ -9,6 +9,9 @@ import random
 from multiprocessing import Process
 
 from routes import road_class_to_kmph, swap_if_less
+from plotting import create_roc, create_roc_swapped
+
+POINTS_IN_ROUTE = 30
 
 def route_verifier(routes):
     for i in range(0, len(routes) - 1):
@@ -23,15 +26,20 @@ def route_verifier(routes):
     return True
         
 
-def plot_async(G, routes, route_colors):
+def plot_async(G, routes, route_colors, iteration, travel_time):
     fig, ax = ox.plot_graph_routes(G, routes, 
     route_colors=route_colors, 
-    route_linewidth=6, 
-    node_size=0)
+    route_linewidth=6, node_size=0,
+    show=False, close=False)
+
+    fig.suptitle(f"Iteration {iteration}")
+    ax.set_title(f"Travel time: {travel_time} seconds")
+    plt.show()
+
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    TARGET_FILE = "micro-Toronto.osm.pbf"
+    TARGET_FILE = "mini-Toronto.osm.pbf"
 
     print(os.path.join(dir_path, TARGET_FILE))
 
@@ -90,7 +98,7 @@ def main():
     G = osm.to_graph(nodes, edges, graph_type="networkx")
 
     # generate random points, get nearest nodes
-    random_points = ox.utils_geo.sample_points(G, 10)
+    random_points = ox.utils_geo.sample_points(G, POINTS_IN_ROUTE)
     random_node_ids = ox.distance.nearest_nodes(G, random_points.x.values, random_points.y.values)
 
     # generate routes to/from all points? 4d array????
@@ -113,7 +121,7 @@ def main():
 
     route = nx.shortest_path(G, random_node_ids[len(random_node_ids) - 1], random_node_ids[0], weight="travel_time_seconds")
     travel_time = nx.path_weight(G, route, "travel_time_seconds")
-    print(f"############### ROUTE 9 ###############")
+    print(f"############### ROUTE {len(random_node_ids) - 1} ###############")
     print("####### TRAVEL TIME " + str(travel_time) + " #######")
     routes.append(route)
     total_travel_time += travel_time
@@ -121,20 +129,21 @@ def main():
 
     #fig, ax = ox.plot_graph_routes(G, routes, route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"], route_linewidth=6, node_size=0)
 
-    route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"]
+    route_colors = create_roc(POINTS_IN_ROUTE)
 
     # draw base graph
-    draw = Process(target=plot_async, args=(G, routes, route_colors))
+    draw = Process(target=plot_async, args=(G, routes, route_colors, 0, total_travel_time))
     draw.start()
 
-    while True:
+
+    for iteration in range(1, 200):
 
         # run one step of SA based on user input
-        in_string = input("Enter any string to continue OR quit to quit\n")
-        if in_string == "quit":
-            break
-        else:
-            print("Step in simulated annealing")
+        #in_string = input("Enter any string to continue OR quit to quit\n")
+        #if in_string == "quit":
+        #    break
+        #else:
+        #    print("Step in simulated annealing")
         
         # generate random indexes, store bigger index in index_2
         # call if Math.abs(index2 - index1) > 1
@@ -148,22 +157,23 @@ def main():
 
             routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time)
 
-            if changed:
-                route_colors=["r", "r", "r", "r", "r", "r", "r", "r", "r", "r"]
+            if changed and iteration > 180:
+                route_colors = create_roc_swapped(POINTS_IN_ROUTE, index_1, index_2)
+                
+                # draw async
+                draw = Process(target=plot_async, args=(G, routes, route_colors, iteration, total_travel_time))
+                draw.start()
+            #else:
+            #    route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r", "g", "b", "r", "g", "b", "r", "g", "b", "r", "g"]
 
-                route_colors[index_1] = "b"
-                route_colors[index_2] = "b"
-                for i in range(index_1 + 1, index_2):
-                    route_colors[i] = "y"
-            else:
-                route_colors=["r", "g", "b", "r", "g", "b", "r", "g", "b", "r"]
-
-            #draw async
-            draw = Process(target=plot_async, args=(G, routes, route_colors))
-            draw.start()
+            elif (iteration % 20) == 0:
+                #draw async
+                route_colors = create_roc(POINTS_IN_ROUTE)
+                draw = Process(target=plot_async, args=(G, routes, route_colors, iteration, total_travel_time))
+                draw.start()
 
 
-    print("CLOSE ALL GRAPH WINDOWS")
+    print("\n ### CLOSE ALL GRAPH WINDOWS ###\n")
     draw.join()
 
     #ox.plot_graph(G)
