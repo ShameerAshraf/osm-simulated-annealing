@@ -11,7 +11,7 @@ from multiprocessing import Process
 from routes import road_class_to_kmph, swap_if_less
 from plotting import create_roc, create_roc_swapped
 
-POINTS_IN_ROUTE = 30
+POINTS_IN_ROUTE = 15
 
 def route_verifier(routes):
     for i in range(0, len(routes) - 1):
@@ -136,7 +136,7 @@ def main():
     draw.start()
 
 
-    for iteration in range(1, 200):
+    for iteration in range(1, 201):
 
         # run one step of SA based on user input
         #in_string = input("Enter any string to continue OR quit to quit\n")
