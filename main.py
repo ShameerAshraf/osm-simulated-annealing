@@ -103,6 +103,22 @@ def main():
 
     # generate routes to/from all points? 4d array????
     # paths[source][destination] = route[nodes]
+    '''
+    cached_routes = dict()
+
+    for u in range(0, len(random_node_ids)):
+        cached_routes[random_node_ids[u]] = dict()
+        for v in range(0, len(random_node_ids)):
+            if u == v:
+                continue
+            if random_node_ids[u] == random_node_ids[v]:
+                continue
+
+            route = nx.shortest_path(G, random_node_ids[u], random_node_ids[v], weight="travel_time_seconds")
+
+            # store cached_routes
+            cached_routes[random_node_ids[u]][random_node_ids[v]] = route
+    '''
 
     routes = []
     total_travel_time = 0
