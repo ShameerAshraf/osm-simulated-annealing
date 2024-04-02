@@ -2,6 +2,8 @@ import networkx as nx
 import random
 import math
 
+from geopy import distance
+
 ALPHA = 0.01
 TEMPERATURE = 200
 MAX_ITERATIONS = 180
@@ -46,9 +48,39 @@ def p_accept_new(t1, t2):
             return True
         return False
 
+# cache routes from source to all destinations
+def build_cache_routes(G, random_node_ids, algo, nodes):
+    # heuristic is prioritizing less distance too much, add speedlimit to improve
+    # longitude is 2nd arg
+    def h1(a, b):
+        nodes.loc[nodes['id'] == a]
+        locationa = (nodes.loc[nodes['id'] == a]['lat'].item(), nodes.loc[nodes['id'] == a]['lon'].item())
+        locationb = (nodes.loc[nodes['id'] == b]['lat'].item(), nodes.loc[nodes['id'] == b]['lon'].item())
+        heuristic = distance.distance(locationa, locationb).m
+        return heuristic
+    
+    cached_routes = dict()
+
+    for u in range(0, len(random_node_ids)):
+        cached_routes[random_node_ids[u]] = dict()
+        for v in range(0, len(random_node_ids)):
+            if u == v:
+                continue
+            
+            if algo == "w":
+                route = nx.shortest_path(G, random_node_ids[u], random_node_ids[v], weight="travel_time_seconds")
+            elif algo == "a":
+                route = nx.astar_path(G, random_node_ids[u], random_node_ids[v], heuristic=h1, weight="travel_time_seconds")
+            else:
+                route = nx.shortest_path(G, random_node_ids[u], random_node_ids[v], weight="travel_time_seconds")
+            # store cached_routes
+            cached_routes[random_node_ids[u]][random_node_ids[v]] = route
+
+    return cached_routes
+
 
 # swap edges in route, check if total length has decreased
-def swap_if_less(G, routes, index_1, index_2, total_travel_time):
+def swap_if_less(G, routes, index_1, index_2, total_travel_time, cached_routes):
 
     if LOCAL_ITERATIONS > MAX_ITERATIONS:
         print("Max iterations reached")
@@ -71,17 +103,17 @@ def swap_if_less(G, routes, index_1, index_2, total_travel_time):
     # reverse edges in between
     new_pos = 0
     for i in range(index_1 + 1, index_2):
-        temp = nx.shortest_path(G, routes[i][len(routes[i]) - 1], routes[i][0])
+        temp = cached_routes[routes[i][len(routes[i]) - 1]][routes[i][0]]
         travel_time = nx.path_weight(G, temp, "travel_time_seconds")
         print(f"travel_time_{i}: {travel_time}")
         new_routes[index_2 - 1 - new_pos] = temp
         new_pos += 1
 
-    new_1 = nx.shortest_path(G, source_1, source_2, weight="travel_time_seconds")
+    new_1 = cached_routes[source_1][source_2]
     travel_time_1 = nx.path_weight(G, new_1, "travel_time_seconds")
     print(f"travel_time_{index_1}: {travel_time_1}")
 
-    new_2 = nx.shortest_path(G, dest_1, dest_2, weight="travel_time_seconds")
+    new_2 = cached_routes[dest_1][dest_2]
     travel_time_2 = nx.path_weight(G, new_2, "travel_time_seconds")
     print(f"travel_time_{index_2}: {travel_time_2}")
 

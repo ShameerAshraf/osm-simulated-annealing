@@ -8,10 +8,10 @@ import random
 
 from multiprocessing import Process
 
-from routes import road_class_to_kmph, swap_if_less
+from routes import road_class_to_kmph, swap_if_less, build_cache_routes
 from plotting import create_roc, create_roc_swapped
 
-POINTS_IN_ROUTE = 15
+POINTS_IN_ROUTE = 5
 
 def route_verifier(routes):
     for i in range(0, len(routes) - 1):
@@ -39,7 +39,7 @@ def plot_async(G, routes, route_colors, iteration, travel_time):
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    TARGET_FILE = "mini-Toronto.osm.pbf"
+    TARGET_FILE = "micro-Toronto.osm.pbf"
 
     print(os.path.join(dir_path, TARGET_FILE))
 
@@ -101,24 +101,9 @@ def main():
     random_points = ox.utils_geo.sample_points(G, POINTS_IN_ROUTE)
     random_node_ids = ox.distance.nearest_nodes(G, random_points.x.values, random_points.y.values)
 
-    # generate routes to/from all points? 4d array????
-    # paths[source][destination] = route[nodes]
-    '''
-    cached_routes = dict()
-
-    for u in range(0, len(random_node_ids)):
-        cached_routes[random_node_ids[u]] = dict()
-        for v in range(0, len(random_node_ids)):
-            if u == v:
-                continue
-            if random_node_ids[u] == random_node_ids[v]:
-                continue
-
-            route = nx.shortest_path(G, random_node_ids[u], random_node_ids[v], weight="travel_time_seconds")
-
-            # store cached_routes
-            cached_routes[random_node_ids[u]][random_node_ids[v]] = route
-    '''
+    # cache has paths[source][destination] = route[nodes]
+    cached_routes = build_cache_routes(G, random_node_ids, "w", nodes)
+    #cached_astar = build_cache_routes(G, random_node_ids, "a", nodes)
 
     routes = []
     total_travel_time = 0
@@ -171,7 +156,7 @@ def main():
             if index_1 > index_2:
                 index_1, index_2 = index_2, index_1
 
-            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time)
+            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time, cached_routes)
 
             if changed and iteration > 180:
                 route_colors = create_roc_swapped(POINTS_IN_ROUTE, index_1, index_2)
