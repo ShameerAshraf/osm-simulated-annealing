@@ -1,4 +1,5 @@
 import networkx as nx
+import osmnx as ox
 import random
 import math
 
@@ -47,6 +48,62 @@ def p_accept_new(t1, t2):
         if random.random() <= math.exp(- delta / TEMPERATURE):
             return True
         return False
+    
+# find direction of travel
+def travel_headings(G, nodes, route):
+    #route = cached_routes[208530977][208531022]
+
+    route_headings = [0, 0, 0, 0]
+
+    for i in range(0, len(route) - 1):
+        source = route[i]
+        dest = route[i+1]
+
+        source_node = nodes.loc[nodes['id'] == source]
+        source_lat =  source_node['lat'].item()
+        source_lon = source_node['lon'].item()
+        dest_node = nodes.loc[nodes['id'] == dest]
+        dest_lat = dest_node['lat'].item()
+        dest_lon = dest_node['lon'].item()
+
+        edge_length = G[source][dest][0]["length"]
+
+        WEST = EAST = NORTH = SOUTH = 0
+
+        bearing = ox.bearing.calculate_bearing(source_lat, source_lon, dest_lat, dest_lon)
+        angle = math.radians(bearing)
+
+        if bearing < 90:
+            EAST = edge_length * math.sin(angle)
+            NORTH = edge_length * math.cos(angle)
+            #print(f"north: {NORTH} east: {EAST} bearing: {bearing}")
+        elif bearing > 270:
+            WEST = edge_length * math.cos(angle - (3*math.pi/2))
+            NORTH = edge_length * math.sin(angle - (3*math.pi/2))
+            #print(f"north: {NORTH} west: {WEST} bearing: {bearing}")
+        elif bearing > 180 and bearing < 270:
+            WEST = edge_length * math.sin(angle - math.pi)
+            SOUTH = edge_length * math.cos(angle - math.pi)
+            #print(f"south: {SOUTH} west: {WEST} bearing: {bearing}")
+        elif bearing > 90 and bearing < 180:
+            EAST = edge_length * math.cos(angle - (math.pi/2))
+            SOUTH = edge_length * math.sin(angle - (math.pi/2))
+            #print(f"south: {SOUTH} east: {EAST} bearing: {bearing}")
+        else:
+            match bearing:
+                case 0 | 360:
+                    NORTH = edge_length
+                case 90:
+                    EAST = edge_length
+                case 180:
+                    SOUTH = edge_length
+                case 270:
+                    WEST = edge_length
+            #print(f"never: {NORTH} eat: {EAST} slimy: {SOUTH} worms: {WEST} edge length: {edge_length}")
+
+        route_headings = [x + y for x, y in zip(route_headings, [NORTH, EAST, SOUTH, WEST])]
+
+    return route_headings
 
 # cache routes from source to all destinations
 def build_cache_routes(G, random_node_ids, algo, nodes):
