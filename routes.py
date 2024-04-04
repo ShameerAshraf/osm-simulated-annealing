@@ -128,9 +128,10 @@ def build_cache_routes(G, random_node_ids, algo, nodes):
     # heuristic is prioritizing less distance too much, add speedlimit to improve
     # longitude is 2nd arg
     def h1(a, b):
-        nodes.loc[nodes['id'] == a]
-        locationa = (nodes.loc[nodes['id'] == a]['lat'].item(), nodes.loc[nodes['id'] == a]['lon'].item())
-        locationb = (nodes.loc[nodes['id'] == b]['lat'].item(), nodes.loc[nodes['id'] == b]['lon'].item())
+        node_a = nodes.loc[nodes['id'] == a]
+        node_b = nodes.loc[nodes['id'] == a]
+        locationa = (node_a['lat'].item(), node_a['lon'].item())
+        locationb = (node_b['lat'].item(), node_b['lon'].item())
         heuristic = distance.distance(locationa, locationb).m
         return heuristic
     

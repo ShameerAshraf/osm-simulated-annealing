@@ -1,5 +1,0 @@
-  access  area bicycle bridge cycleway  ... osm_type                                           geometry         u           v   length
-0   None  None    None   None     None  ...      way  LINESTRING (-79.35227 43.76645, -79.34720 43.7...  18317258    18317259  407.839
-1   None  None    None   None     None  ...      way  LINESTRING (-79.34720 43.76661, -79.34702 43.7...  18317259  3791773241   14.710
-
-[2 rows x 38 columns]
