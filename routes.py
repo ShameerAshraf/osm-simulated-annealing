@@ -10,6 +10,7 @@ TEMPERATURE = 200
 MAX_ITERATIONS = 180
 LOCAL_ITERATIONS = 0
 
+
 # adding speedlimits
 def road_class_to_kmph(road_class):
     """
@@ -28,6 +29,7 @@ def road_class_to_kmph(road_class):
         return 20
     else:
         return 50
+
 
 # do the math
 def p_accept_new(t1, t2):
@@ -49,6 +51,7 @@ def p_accept_new(t1, t2):
             return True
         return False
     
+
 # find direction of travel
 def travel_headings(G, nodes, route):
     #route = cached_routes[208530977][208531022]
@@ -104,6 +107,21 @@ def travel_headings(G, nodes, route):
         route_headings = [x + y for x, y in zip(route_headings, [NORTH, EAST, SOUTH, WEST])]
 
     return route_headings
+
+
+# cache length travelled in each direction
+def build_cache_direction(G, nodes, cached_routes):
+    cached_travel_direction = dict()
+
+    for source, possible_endpoints in cached_routes.items():
+        cached_travel_direction[source] = dict()
+        for destination, path in possible_endpoints.items():
+            path_headings = travel_headings(G, nodes, path)
+            
+            cached_travel_direction[source][destination] = path_headings
+
+    return cached_travel_direction
+
 
 # cache routes from source to all destinations
 def build_cache_routes(G, random_node_ids, algo, nodes):
