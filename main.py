@@ -102,8 +102,8 @@ def main():
     random_node_ids = ox.distance.nearest_nodes(G, random_points.x.values, random_points.y.values)
 
     # cache has paths[source][destination] = route[nodes]
-    #cached_routes = build_cache_routes(G, random_node_ids, "w", nodes)
-    cached_astar = build_cache_routes(G, random_node_ids, "a", nodes)
+    cached_routes = build_cache_routes(G, random_node_ids, "w", nodes)
+    #cached_astar = build_cache_routes(G, random_node_ids, "a", nodes)
 
     routes = []
     total_travel_time = 0
@@ -156,7 +156,7 @@ def main():
             if index_1 > index_2:
                 index_1, index_2 = index_2, index_1
 
-            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time, cached_astar)
+            routes, total_travel_time, changed = swap_if_less(G, routes, index_1, index_2, total_travel_time, cached_routes)
 
             if changed and iteration > 180:
                 route_colors = create_roc_swapped(POINTS_IN_ROUTE, index_1, index_2)
